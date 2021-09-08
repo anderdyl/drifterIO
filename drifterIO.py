@@ -4,6 +4,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pyproj
+# need to point to your cmtb repo
 from testbedutils import geoprocess
 import scipy.io
 import math
@@ -432,26 +433,3 @@ sc = axDrift.scatter(drifterlist[-1]['y'], drifterlist[-1]['x'], s=10, c=drifter
 axDrift.set_xlim([500, 750])
 axDrift.set_ylim([225,50])
 
-#
-#
-# fig, ax = plt.subplots(3, 1, figsize=(10, 10), sharex=True, sharey=True)
-#
-# im = scipy.io.loadmat(
-#     '/home/dylananderson/projects/drifters/1572458401.Wed.Oct.30_18_00_01.GMT.2019.argus02b.cx.timex.merge')
-# #    '/home/dylananderson/projects/drifters/1571666401.Mon.Oct.21_14_00_01.GMT.2019.argus02b.cx.timex.merge')
-#
-# ims = ax[0].imshow(im['Ip'], origin="upper",
-#                    extent=(np.min(im['y']), np.max(im['y']), np.max(im['x']), np.min(im['x'])))
-# sc = ax[0].scatter(y_moving, x_moving, s=10, c=v, marker=u'.', vmin=0, vmax=2, edgecolor='None')
-# # sc = ax[0].scatter(y, x, s=10, c=v, marker=u'.', vmin=0, vmax=2, edgecolor='None')
-#
-# ims1 = ax[1].imshow(im['Ip'], origin="upper",
-#                     extent=(np.min(im['y']), np.max(im['y']), np.max(im['x']), np.min(im['x'])))
-# sc1 = ax[1].scatter(y_moving, x_moving, s=10, c=vy, marker=u'.', vmin=-2, vmax=2, cmap='RdBu', edgecolor='None')
-# # sc1 = ax[1].scatter(y, x, s=10, c=vy, marker=u'.', vmin=-2, vmax=2, cmap='RdBu', edgecolor='None')
-#
-# ims2 = ax[2].imshow(im['Ip'], origin="upper",
-#                     extent=(np.min(im['y']), np.max(im['y']), np.max(im['x']), np.min(im['x'])))
-# sc2 = ax[2].scatter(y_moving, x_moving, s=10, c=vx, marker=u'.', vmin=-2, vmax=2, cmap='RdBu', edgecolor='None')
-# # sc2 = ax[2].scatter(y, x, s=10, c=vx, marker=u'.', vmin=-2, vmax=2, cmap='RdBu', edgecolor='None')
-#
