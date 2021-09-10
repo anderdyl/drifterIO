@@ -163,6 +163,107 @@ def getAndroDrifter(drifterpath, filename, startTime, endTime):
 
 
 
+
+def getGPSLoggerDrifter(drifterpath, filename):
+
+    with open(os.path.join(drifterpath, filename), 'r') as f:
+        lines = f.readline().split(sep=',')
+        data = f.readlines()
+
+    splitdata = np.zeros((len(data), len(lines)),)
+    times = np.zeros((len(data),))
+    num = len(data)
+    lat = np.zeros((len(data),))
+    lon = np.zeros((len(data),))
+    speed = np.zeros((len(data),))
+    sat = np.zeros((len(data),))
+    good = np.ones((len(data),))
+    #t = np.array((len(data),))
+
+    for i in range(len(data)):
+        splittemp = data[i].split(',')
+        #t = splittemp[0]
+        if i == 0:
+            t = datetime.datetime.strptime(splittemp[0][0:19], '%Y-%m-%dT%H:%M:%S')
+        else:
+            t = np.append(t, datetime.datetime.strptime(splittemp[0][0:19], '%Y-%m-%dT%H:%M:%S'))
+        lat[i] = float(splittemp[1])
+        lon[i] = float(splittemp[2])
+        sat[i] = float(splittemp[4])
+        if splittemp[8] == 'network':
+            good[i] = 0
+        #speed[i] = (splittemp[3])
+
+
+    #rawDate = [line.split(sep=';')[0].rstrip('\n') for line in open(os.path.join(path, file_name))]
+    #rawDate = rawDate[2:]
+
+    #rawDate = [line.split(sep=',').rstrip('\n') for line in data]
+
+    badvalues = np.nonzero(good < 0.5)
+    lat = np.delete(lat, badvalues)
+    lon = np.delete(lon, badvalues)
+    t = np.delete(t, badvalues)
+
+    #measTime[i] = datetime.datetime.strptime(splittemp[0], '%Y-%m-%dT%H:%M:%SZ')
+    #measTime = np.array([datetime.datetime.strptime(aa, '%Y-%m-%dT%H:%M:%SZ') for aa in rawDate])
+
+
+    #drifter['time'] = measTime
+
+    myProj = pyproj.Proj("+proj=utm +zone=18S, +north +ellps=WGS84 +datum=WGS84 +untis=m +no_defs")
+    ncSP = pyproj.Proj(init='epsg:3358')
+    meshNCx, meshNCy = ncSP(lon, lat)
+
+    FRF = geoprocess.FRFcoord(meshNCx, meshNCy)
+    x = FRF['xFRF']
+    y = FRF['yFRF']
+    allSteps = t[-1]-t[0]
+    intTime = []
+    base = t[0]
+    for i in range((allSteps.seconds)):
+        intTime.append(base + datetime.timedelta(seconds=1 * i))
+
+    intTime = np.asarray(intTime)
+
+
+    tSeconds = np.asarray([(i - t[0]).total_seconds() for i in t])
+    intSeconds = np.asarray([(i - intTime[0]).total_seconds() for i in intTime])
+
+    xInt = np.interp(intSeconds,tSeconds,x)
+    yInt = np.interp(intSeconds,tSeconds,y)
+
+    x_moving = xInt # moving_average(x, n=3)
+    y_moving = yInt #moving_average(y, n=3)
+
+    v = np.zeros((len(x_moving),))
+    vx = np.zeros((len(x_moving),))
+    vy = np.zeros((len(x_moving),))
+
+    for i in range(len(x_moving)-1):
+        timediff = (intTime[i+1]-intTime[i]).total_seconds()
+        v[i] = math.hypot(x_moving[i+1] - x_moving[i], y_moving[i+1] - y_moving[i])/timediff
+        vx[i] = np.sign(x_moving[i+1] - x_moving[i]) * math.hypot(x_moving[i+1] - x_moving[i], 0)/timediff
+        vy[i] = np.sign(y_moving[i+1] - y_moving[i]) * math.hypot(y_moving[i+1] - y_moving[i], 0)/timediff
+
+    drifter = dict()
+    drifter['lat'] = lat
+    drifter['lon'] = lon
+    drifter['t'] = intTime
+    drifter['x'] = xInt
+    drifter['y'] = yInt
+    drifter['v'] = v
+    drifter['vx'] = vx
+    drifter['vy'] = vy
+    drifter['tOrig'] = t
+    drifter['xOrig'] = x
+    drifter['yOrig'] = y
+
+    return drifter
+
+
+
+
 file_name = dict()
 drifterpath = '/home/dylananderson/projects/drifters/data/Dec15'
 files = os.listdir(drifterpath)
